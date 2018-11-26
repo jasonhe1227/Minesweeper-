@@ -1,0 +1,245 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+
+public class Minesweeper implements ActionListener {
+    JFrame frame = new JFrame("Minesweeper");
+    JButton reset = new JButton("Reset");
+    JButton[][] buttons = new JButton[16][30];
+    int[][] counts = new int[16][30];
+    Container grid = new Container();
+    final int MINE = 10;
+
+    public Minesweeper() {
+        frame.setSize(1280, 800);
+        frame.setLayout(new BorderLayout());
+        frame.add(reset, BorderLayout.NORTH);
+        reset.addActionListener(this);
+        //Buttons Grid
+        grid.setLayout(new GridLayout(16, 30));
+        for (int a = 0; a < buttons.length; a++) {
+            for (int b = 0; b < buttons[0].length; b++) {
+                buttons[a][b] = new JButton();
+                buttons[a][b].addActionListener(this);
+                grid.add(buttons[a][b]);
+            }
+        }
+        frame.add(grid, BorderLayout.CENTER);
+        createRandomMines();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        new Minesweeper();
+    }
+
+    public void createRandomMines() {
+        //initizlizes list of random pairs
+        ArrayList<Integer> list = new ArrayList<>();
+        for (int x = 0; x < counts.length; x++) {
+            for (int y = 0; y < counts[0].length; y++) {
+                list.add(x * 100 + y);
+            }
+
+        }
+        //resets counts, pick out 30 mines
+        counts = new int[16][30];
+        for (int a = 0; a < 30; a++) {
+            int choice = (int) (Math.random() * list.size());
+            counts[list.get(choice) / 100][list.get(choice) % 100] = MINE;
+            list.remove(choice);
+        }
+
+        //initialize neighbor counts
+        for (int x = 0; x < counts.length; x++) {
+            for (int y = 0; y < counts[0].length; y++) {
+                if (counts[x][y] != MINE) {
+                    int neighborcount = 0;
+                    if (x > 0 && y > 0 && counts[x - 1][y - 1] == MINE) {
+                        neighborcount++;
+                    } //up left
+                    if (y > 0 && counts[x][y - 1] == MINE) {
+                        neighborcount++;
+                    } //Up
+                    if (x < counts.length - 1 && y > 0 && counts[x + 1][y - 1] == MINE) {
+                        neighborcount++;
+                    } //Up right
+                    if (x < counts.length - 1 && counts[x + 1][y] == MINE) {
+                        neighborcount++;
+                    } //Right
+                    if (x < counts.length - 1 && y < counts[0].length - 1 && counts[x + 1][y + 1] == MINE) {
+                        neighborcount++;
+                    } //Down right
+                    if (y < counts[0].length - 1 && counts[x][y + 1] == MINE) {
+                        neighborcount++;
+                    } //Down
+                    if (x > 0 && y < counts[0].length - 1 && counts[x - 1][y + 1] == MINE) {
+                        neighborcount++;
+                    } //Down left
+                    if (x > 0 && counts[x - 1][y] == MINE) {
+                        neighborcount++;
+                    } //Left
+                    counts[x][y] = neighborcount;
+                }
+            }
+        }
+
+        //for (int i = 0; i < buttons.length; i++) {
+        //for (int j = 0; j < buttons[0].length ; j++) {
+        //if(event.getSource().equals(buttons[i][j])){
+        //buttons[i][j].setText(counts[i][j] + "");
+        //}
+        //}
+        //}
+    }
+
+    public void gameOver() {
+        for (int i = 0; i < buttons.length; i++) {
+            for (int j = 0; j < buttons[0].length; j++) {
+                if (buttons[i][j].isEnabled()) {
+                    if (counts[i][j] != MINE) {
+                        buttons[i][j].setText(counts[i][j] + "");
+                        buttons[i][j].setEnabled(false);
+                    } else {
+                        buttons[i][j].setText("X");
+                        buttons[i][j].setEnabled(false);
+                    }
+                }
+            }
+        }
+    }
+
+    public void clearZeros(ArrayList<Integer> toClear) {
+        if (toClear.size() == 0) {
+            return;
+        } else {
+            int x = toClear.get(0) / 100;
+            int y = toClear.get(0) % 100;
+            toClear.remove(0);
+                if (x > 0 && y > 0 && buttons[x-1][y-1].isEnabled()) { //Up left
+                    buttons[x - 1][y - 1].setText(counts[x - 1][y - 1] + "");
+                    buttons[x-1][y-1].setBackground(Color.WHITE);
+                    buttons[x - 1][y - 1].setEnabled(false);
+                    if (counts[x - 1][y - 1] == 0) {
+                        toClear.add((x - 1) * 100 + (y - 1));
+                    }
+                }
+                if (y > 0 && buttons[x][y-1].isEnabled()) { //up
+                    buttons[x][y - 1].setText(counts[x][y - 1] + "");
+                    buttons[x][y-1].setBackground(Color.WHITE);
+                    buttons[x][y - 1].setEnabled(false);
+                    if (counts[x][y - 1] == 0) {
+                        toClear.add((x) * 100 + (y - 1));
+                    }
+                }
+                if (x < counts.length - 1 && y > 0 && buttons[x+1][y-1].isEnabled()) { //up right
+                    buttons[x + 1][y - 1].setText(counts[x + 1][y - 1] + "");
+                    buttons[x+1][y-1].setBackground(Color.WHITE);
+                    buttons[x + 1][y - 1].setEnabled(false);
+                    if (counts[x + 1][y - 1] == 0) {
+                        toClear.add((x + 1) * 100 + (y - 1));
+                    }
+                }
+                if (x < counts.length - 1 && buttons[x+1][y].isEnabled()) { //Right
+                    buttons[x + 1][y].setText(counts[x + 1][y] + "");
+                    buttons[x+1][y].setBackground(Color.WHITE);
+                    buttons[x + 1][y].setEnabled(false);
+                    if (counts[x + 1][y] == 0) {
+                        toClear.add((x + 1) * 100 + (y));
+                    }
+                }
+                if (x < counts.length - 1 && y < counts[0].length - 1 && buttons[x+1][y+1].isEnabled()) { //Down Right
+                    buttons[x + 1][y + 1].setText(counts[x + 1][y + 1] + "");
+                    buttons[x+1][y+1].setBackground(Color.WHITE);
+                    buttons[x + 1][y + 1].setEnabled(false);
+                    if (counts[x + 1][y + 1] == 0) {
+                        toClear.add((x + 1) * 100 + (y + 1));
+                    }
+                }
+                if (y < counts[0].length - 1 && buttons[x][y+1].isEnabled()) { //Down
+                    buttons[x][y + 1].setText(counts[x][y + 1] + "");
+                    buttons[x][y+1].setBackground(Color.WHITE);
+                    buttons[x][y + 1].setEnabled(false);
+                    if (counts[x][y + 1] == 0) {
+                        toClear.add((x) * 100 + (y + 1));
+                    }
+                }
+                if (x > 0 && y < counts[0].length - 1 && buttons[x-1][y+1].isEnabled()) { //Down left
+                    buttons[x - 1][y + 1].setText(counts[x - 1][y + 1] + "");
+                    buttons[x-1][y+1].setBackground(Color.WHITE);
+                    buttons[x - 1][y + 1].setEnabled(false);
+                    if (counts[x - 1][y + 1] == 0) {
+                        toClear.add((x - 1) * 100 + (y + 1));
+
+                    }
+                }
+                if (x > 0 && buttons[x-1][y].isEnabled()) { //Left
+                    buttons[x - 1][y].setText(counts[x - 1][y] + "");
+                    buttons[x-1][y].setBackground(Color.WHITE);
+                    buttons[x - 1][y].setEnabled(false);
+                    if (counts[x - 1][y] == 0) {
+                        toClear.add((x - 1) * 100 + (y));
+                    }
+                }
+            clearZeros(toClear);
+        }
+    }
+    public void checkWin(){
+        boolean win = true;
+        for (int i = 0; i < counts.length; i++) {
+            for (int j = 0; j < counts[0].length-1; j++) {
+                if(counts[i][j] != MINE && buttons[i][j].isEnabled() == true){
+                    win = false;
+                }
+            }
+        }
+        if(win == true){
+            JOptionPane.showMessageDialog(frame, "You win!!!");
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent event) {
+
+        if (event.getSource().equals(reset)){
+            //reset the board
+            for (int i = 0; i < buttons.length; i++) {
+                for (int j = 0; j < buttons[0].length; j++) {
+                    buttons[i][j].setBackground(new JButton().getBackground());
+                    buttons[i][j].setEnabled(true);
+                    buttons[i][j].setText("");
+                }
+
+            }
+        }else {
+            for (int i = 0; i < buttons.length; i++) {
+                for (int j = 0; j < buttons[0].length ; j++) {
+                     if(event.getSource().equals(buttons[i][j])){
+                        if(counts[i][j] == MINE) {
+                            buttons[i][j].setForeground(Color.RED);
+                            buttons[i][j].setText("X");
+                            gameOver();
+                        }else if (counts[i][j] == 0){
+                            buttons[i][j].setText(counts[i][j] + "");
+                            buttons[i][j].setBackground(Color.WHITE);
+                            buttons[i][j].setEnabled(false);
+                            ArrayList<Integer> toClear = new ArrayList<Integer>();
+                            toClear.add(i*100 + j);
+                            clearZeros(toClear);
+                            checkWin();
+                        }
+                        else {
+                            buttons[i][j].setText(counts[i][j] + "");
+                            buttons[i][j].setBackground(Color.WHITE);
+                            buttons[i][j].setEnabled(false);
+                            checkWin();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
